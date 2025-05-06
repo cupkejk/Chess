@@ -67,8 +67,20 @@ class Board:
     def move_piece(self, move):
         if not self.is_valid(move): return False
         self.board[move.toy][move.tox] = self.board[move.fromy][move.fromx]
-        if(isinstance(self.board[move.toy][move.tox], Pawn)): self.board[move.toy][move.tox].moved = True
+        self.board[move.toy][move.tox].moved = True
         self.board[move.fromy][move.fromx] = Blank()
+        #print(f"moved piece from {move.fromx} {move.fromy} to {move.tox} { move.toy}")
+
+    def checkWin(self):
+        blackwin = True
+        whitewin = True
+        for row in self.board:
+            for piece in row:
+                if(str(piece) == "wK"): blackwin = False
+                if(str(piece) == "bK"): whitewin = False
+        if(whitewin): return 1
+        if(blackwin): return -1
+        return 0
 
     
 
@@ -80,9 +92,10 @@ class Move:
         self.toy = toy
 
 class ChessPiece:
-    def __init__(self, points = 0, color = 1):
+    def __init__(self, points = 0, color = 0):
         self.points = points
         self.color = color
+        self.moved = False
     
     def createMask(self):
         pass
@@ -114,7 +127,6 @@ class Blank(ChessPiece):
 class Pawn(ChessPiece):
     def __init__(self, color):
         super().__init__(1, color)
-        self.moved = False
     
     def __str__(self):
         if(self.color == 1): return "wP"

@@ -64,6 +64,21 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        
+        winner = board.checkWin()
+        if winner != 0:
+            if winner == 1:
+                win_text = "White wins!"
+            else:
+                win_text = "Black wins!"
+            font = pygame.font.SysFont(None, 64)
+            text_surface = font.render(win_text, True, (0, 255, 0))
+            text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+            screen.blit(text_surface, text_rect)
+            pygame.display.flip()
+            
+            pygame.time.delay(3000)
+            running = False
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x, y = get_board_coords(mouse_pos)
