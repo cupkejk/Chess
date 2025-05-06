@@ -237,5 +237,3 @@ def consolePlay():
         numbers = [eval(i) for i in move]
         move = Move(numbers[0], numbers[1], numbers[2], numbers[3])
         board.move_piece(move)
-
-consolePlay()
