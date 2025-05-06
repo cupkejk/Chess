@@ -1,6 +1,21 @@
 import pygame
 import os
 from chess import Board, Move
+import socket
+
+HOST = '127.0.0.1'
+PORT = 65432
+
+def data_to_arr(data):
+    message = data.decode('utf-8')
+    message = message.split(' ')
+    message = [eval(num) for num in message]
+    return message
+
+def move_to_data(move):
+    message = "1 " + str(move.fromx) + " " + str(move.fromy) + " " + str(move.tox) + " " + str(move.toy)
+    data = message.encode('utf-8')
+    return data
 
 pygame.init()
 
@@ -10,10 +25,6 @@ SQ_SIZE = WIDTH // COLS
 
 WHITE = (240, 217, 181)
 BLACK = (181, 136, 99)
-
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Chess")
-clock = pygame.time.Clock()
 
 PIECES = {}
 for color in ['w', 'b']:
@@ -57,27 +68,49 @@ drag_piece = None
 start_coords = None
 
 running = True
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+s.connect((HOST, PORT))
+data = s.recv(4)
+p_id = int.from_bytes(data)
+print(p_id)
+s.send(int(1).to_bytes())
+s.settimeout(0.0)
+
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Chess")
+clock = pygame.time.Clock()
+
 while running:
     clock.tick(60)
     mouse_pos = pygame.mouse.get_pos()
 
+    try:
+        data = s.recv(1024)
+        print(data)
+        if data:
+            message = data_to_arr(data)
+            move = Move(message[1], message[2], message[3], message[4])
+            board.move_piece(move)
+    except:
+        pass
+
+    winner = board.checkWin()
+    if winner != 0:
+        if winner == 1:
+            win_text = "White wins!"
+        else:
+            win_text = "Black wins!"
+        font = pygame.font.SysFont(None, 64)
+        text_surface = font.render(win_text, True, (0, 255, 0))
+        text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+        screen.blit(text_surface, text_rect)
+        pygame.display.flip()
+        
+        pygame.time.delay(3000)
+        running = False
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
-        
-        winner = board.checkWin()
-        if winner != 0:
-            if winner == 1:
-                win_text = "White wins!"
-            else:
-                win_text = "Black wins!"
-            font = pygame.font.SysFont(None, 64)
-            text_surface = font.render(win_text, True, (0, 255, 0))
-            text_rect = text_surface.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-            screen.blit(text_surface, text_rect)
-            pygame.display.flip()
-            
-            pygame.time.delay(3000)
             running = False
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
@@ -91,7 +124,8 @@ while running:
             end_x, end_y = get_board_coords(mouse_pos)
             move = Move(start_coords[0], start_coords[1], end_x, end_y)
             if board.is_valid(move):
-                board.move_piece(move)
+                data = move_to_data(move)
+                s.send(data)
             dragging = False
             drag_piece = None
             start_coords = None

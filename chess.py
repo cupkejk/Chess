@@ -69,6 +69,7 @@ class Board:
         self.board[move.toy][move.tox] = self.board[move.fromy][move.fromx]
         self.board[move.toy][move.tox].moved = True
         self.board[move.fromy][move.fromx] = Blank()
+        return True
         #print(f"moved piece from {move.fromx} {move.fromy} to {move.tox} { move.toy}")
 
     def checkWin(self):
@@ -97,8 +98,8 @@ class ChessPiece:
         self.color = color
         self.moved = False
     
-    def createMask(self):
-        pass
+    def createMask(self, x, y, board):
+        return self.emptyMask()
 
     def cast(self, x, y, xdir, ydir, board, mask, limit):
         for i in range(1, limit):
