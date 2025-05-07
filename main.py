@@ -2,6 +2,7 @@ import pygame
 import os
 from chess import Board, Move
 import socket
+from time import sleep
 
 HOST = '127.0.0.1'
 PORT = 65432
@@ -67,6 +68,7 @@ def draw_board():
             pygame.draw.rect(screen, color, (col * SQ_SIZE, row * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 def draw_pieces(board_obj, dragging_piece=None, dragging_pos=None):
+    global dragging
     for row in range(ROWS):
         for col in range(COLS):
             piece = None
@@ -82,6 +84,14 @@ def draw_pieces(board_obj, dragging_piece=None, dragging_pos=None):
 
     if dragging_piece and dragging_pos:
         key = str(dragging_piece).strip()
+        if p_color == 1:
+            if key[0] == 'b':
+                dragging = False
+                return
+        else:
+            if key[0] == 'w':
+                dragging = False
+                return
         img = PIECES.get(key)
         if img:
             screen.blit(img, (dragging_pos[0] - SQ_SIZE // 2, dragging_pos[1] - SQ_SIZE // 2))
@@ -151,7 +161,7 @@ while running:
             start_coords = None
 
     draw_board()
-    draw_pieces(board, drag_piece if dragging else None, mouse_pos if dragging else None)
+    draw_pieces(board, board.board[y][x] if dragging else None, mouse_pos if dragging else None)
     pygame.display.flip()
 
 pygame.quit()
