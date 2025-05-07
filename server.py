@@ -1,10 +1,14 @@
 import socket
 import threading
 from chess import Board, Move
+from random import choice
 HOST = '127.0.0.1'
 PORT = 65432
 
 clients = []
+colors = []
+available_colors = [-1, 1]
+
 
 board = Board()
 
@@ -21,7 +25,7 @@ def move_to_data(move):
 
 def handle_client(conn, addr, playerid):
     while len(clients) < 2: pass
-    data = playerid.to_bytes()
+    data = str(colors[playerid]).encode('utf-8')
     conn.send(data)
     data = conn.recv(4)
     num = int.from_bytes(data)
@@ -29,12 +33,13 @@ def handle_client(conn, addr, playerid):
     
     while True:
         data = conn.recv(1024)
+        if not data: break
         message = data_to_arr(data)
         print(f"received message: {message}")
         if message[0] == 1:
             move = Move(message[1], message[2], message[3], message[4])
             print("created a move")
-            if board.move_piece(move):
+            if board.isOccupied(move.fromx, move.fromy) == colors[playerid] and board.move_piece(move):
                 print("made a move")
                 data = move_to_data(move)
                 print("sending data")
@@ -53,4 +58,7 @@ with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     while len(clients) < 2:
         conn, addr = s.accept()
         clients.append(conn)
+        chosen_color = choice(available_colors)
+        available_colors.remove(chosen_color)
+        colors.append(chosen_color)
         threading.Thread(target=handle_client, args=(conn, addr, len(clients)-1)).start()

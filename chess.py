@@ -1,7 +1,3 @@
-from colorama import init, Fore, Style, Back
-
-init()
-
 def inBounds(x, y):
     if(x > 7 or x < 0): return False
     if(y > 7 or y < 0): return False
@@ -30,7 +26,7 @@ class Board:
         self.board[7][3] = Queen(1)
         self.board[7][4] = King(1)
     
-    def toStr(self, color):
+    """def toStr(self, color):
         out = ''
         isBlack = False
         if(color == 1):
@@ -53,7 +49,7 @@ class Board:
                 if i > 0: out += Style.RESET_ALL + ' ' + str(i) + '\n'
                 else: out += Style.RESET_ALL + ' ' + str(i)
             out += '\n 7  6  5  4  3  2  1  0 '
-        return out
+        return out"""
     
     def isOccupied(self, x, y):
         if isinstance(self.board[y][x], Blank):

@@ -17,6 +17,30 @@ def move_to_data(move):
     data = message.encode('utf-8')
     return data
 
+def setup_socket():
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.connect((HOST, PORT))
+    data = s.recv(4)
+    col = eval(data.decode('utf-8'))
+    print("color white") if col == 1 else print("color black")
+    s.send(int(1).to_bytes())
+    s.settimeout(0.0)
+    return s, col
+
+def try_to_receive_data(s):
+    move = None
+    try:
+        data = s.recv(10)
+        print(data)
+        if data:
+            message = data_to_arr(data)
+            move = Move(message[1], message[2], message[3], message[4])
+            board.move_piece(move)
+    except:
+        pass
+    return move
+
+
 pygame.init()
 
 WIDTH, HEIGHT = 640, 640
@@ -45,7 +69,11 @@ def draw_board():
 def draw_pieces(board_obj, dragging_piece=None, dragging_pos=None):
     for row in range(ROWS):
         for col in range(COLS):
-            piece = board_obj.board[row][col]
+            piece = None
+            if p_color == 1:
+                piece = board_obj.board[row][col]
+            else:
+                piece = board_obj.board[7-row][7-col]
             key = str(piece).strip()
             if key and (piece != dragging_piece):
                 img = PIECES.get(key)
@@ -60,6 +88,8 @@ def draw_pieces(board_obj, dragging_piece=None, dragging_pos=None):
 
 def get_board_coords(mouse_pos):
     x, y = mouse_pos
+    if p_color != 1:
+        x, y = WIDTH - x, HEIGHT - y
     return x // SQ_SIZE, y // SQ_SIZE
 
 board = Board()
@@ -68,31 +98,21 @@ drag_piece = None
 start_coords = None
 
 running = True
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.connect((HOST, PORT))
-data = s.recv(4)
-p_id = int.from_bytes(data)
-print(p_id)
-s.send(int(1).to_bytes())
-s.settimeout(0.0)
+
+s, p_color = setup_socket()
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Chess")
+pygame.display.set_caption("White Chess") if p_color == 1 else pygame.display.set_caption("Black Chess")
 clock = pygame.time.Clock()
 
 while running:
     clock.tick(60)
     mouse_pos = pygame.mouse.get_pos()
 
-    try:
-        data = s.recv(1024)
-        print(data)
-        if data:
-            message = data_to_arr(data)
-            move = Move(message[1], message[2], message[3], message[4])
-            board.move_piece(move)
-    except:
-        pass
+    move = try_to_receive_data(s)
+    if move is not None:
+        board.move_piece(move)
+    
 
     winner = board.checkWin()
     if winner != 0:
@@ -115,7 +135,7 @@ while running:
 
         elif event.type == pygame.MOUSEBUTTONDOWN:
             x, y = get_board_coords(mouse_pos)
-            if board.isOccupied(x, y):
+            if board.isOccupied(x, y) == p_color:
                 drag_piece = board.board[y][x]
                 start_coords = (x, y)
                 dragging = True
@@ -123,7 +143,7 @@ while running:
         elif event.type == pygame.MOUSEBUTTONUP and dragging:
             end_x, end_y = get_board_coords(mouse_pos)
             move = Move(start_coords[0], start_coords[1], end_x, end_y)
-            if board.is_valid(move):
+            if board.is_valid(move) and board.isOccupied(move.fromx, move.fromy) == p_color:
                 data = move_to_data(move)
                 s.send(data)
             dragging = False
