@@ -2,8 +2,9 @@ import socket
 import threading
 from chess import Board, Move
 from random import choice
-HOST = '127.0.0.1'
+HOST = 'localhost'
 PORT = 65432
+logging = False
 
 clients = []
 colors = []
@@ -23,6 +24,10 @@ def move_to_data(move):
     data = message.encode('utf-8')
     return data
 
+def printLog(log):
+    if logging:
+        print("DEBUG INFO:", log)
+
 def handle_client(conn, addr, playerid):
     while len(clients) < 2: pass
     data = str(colors[playerid]).encode('utf-8')
@@ -35,14 +40,14 @@ def handle_client(conn, addr, playerid):
         data = conn.recv(1024)
         if not data: break
         message = data_to_arr(data)
-        print(f"received message: {message}")
+        printLog(f"received message: {message}")
         if message[0] == 1:
             move = Move(message[1], message[2], message[3], message[4])
-            print("created a move")
+            printLog("created a move")
             if board.isOccupied(move.fromx, move.fromy) == colors[playerid] and board.move_piece(move):
-                print("made a move")
+                printLog("made a move")
                 data = move_to_data(move)
-                print("sending data")
+                printLog("sending data")
                 clients[0].send(data)
                 clients[1].send(data)
 

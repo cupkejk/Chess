@@ -57,6 +57,7 @@ class Board:
         else: return self.board[y][x].color
     
     def is_valid(self, move):
+        if not inBounds(move.fromx, move.fromy) or not inBounds(move.tox, move.toy): return False
         mask = self.board[move.fromy][move.fromx].createMask(move.fromx, move.fromy, self)
         return mask[move.toy][move.tox]
     

@@ -4,7 +4,7 @@ from chess import Board, Move
 import socket
 from time import sleep
 
-HOST = '127.0.0.1'
+HOST = 'localhost'
 PORT = 65432
 
 def data_to_arr(data):
@@ -23,7 +23,6 @@ def setup_socket():
     s.connect((HOST, PORT))
     data = s.recv(4)
     col = eval(data.decode('utf-8'))
-    print("color white") if col == 1 else print("color black")
     s.send(int(1).to_bytes())
     s.settimeout(0.0)
     return s, col
@@ -32,7 +31,7 @@ def try_to_receive_data(s):
     move = None
     try:
         data = s.recv(10)
-        print(data)
+        printLog(data)
         if data:
             message = data_to_arr(data)
             move = Move(message[1], message[2], message[3], message[4])
@@ -40,6 +39,10 @@ def try_to_receive_data(s):
     except:
         pass
     return move
+
+def printLog(log):
+    print("DEBUG INFO:", log)
+
 
 
 pygame.init()
