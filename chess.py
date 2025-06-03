@@ -68,13 +68,7 @@ class Board:
     
     def is_valid(self, move):
         if not inBounds(move.fromx, move.fromy) or not inBounds(move.tox, move.toy): return False
-        if self.stamina_from_move(move) > self.getStamina(self.isOccupied(move.fromx, move.fromy)): return False
-        mask = self.board[move.fromy][move.fromx].createMask(move.fromx, move.fromy, self)
-        return mask[move.toy][move.tox]
-    
-    def is_valid_client(self, move):
-        if not inBounds(move.fromx, move.fromy) or not inBounds(move.tox, move.toy): return False
-        #if self.stamina_from_move(move) > self.getStamina(self.isOccupied(move.fromx, move.fromy)): return False
+        if self.stamina_from_move(move, before = True) > self.getStamina(self.isOccupied(move.fromx, move.fromy)): return False
         mask = self.board[move.fromy][move.fromx].createMask(move.fromx, move.fromy, self)
         return mask[move.toy][move.tox]
     
@@ -97,10 +91,10 @@ class Board:
         if(blackwin): return -1
         return 0
     
-    def stamina_from_move(self, move):
+    def stamina_from_move(self, move, before):
         try:
-            piece_moved = self.getPiece(move.tox, move.toy)
-            if(piece_moved.points == 0): piece_moved = self.getPiece(move.fromx, move.fromy)
+            if before:piece_moved = self.getPiece(move.fromx, move.fromy)
+            else: piece_moved = self.getPiece(move.tox, move.toy)
         except IndexError:
             print(f"Error: Move coordinates ({move.fromx},{move.fromy}) out of bounds for stamina check.")
             return 0.0
@@ -149,7 +143,7 @@ class Board:
             if self.staminas[i] > self.MAX_STAMINA: self.staminas[i] = 10
     
     def deductStamina(self, move):
-        deduction = self.stamina_from_move(move)
+        deduction = self.stamina_from_move(move, before = False)
         col = self.isOccupied(move.tox, move.toy)
         stamina = self.getStamina(col) - deduction
         self.setStamina(col, stamina)

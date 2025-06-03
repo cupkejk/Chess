@@ -3,8 +3,14 @@ import os
 from chess import Board, Move
 import socket
 from time import sleep
+import sys
 
-HOST = 'localhost'
+if len(sys.argv) > 1:
+    ip = sys.argv[1]
+else:
+    ip = "localhost"
+
+HOST = ip
 PORT = 65432
 
 STAMINA_BAR_WIDTH = 30
