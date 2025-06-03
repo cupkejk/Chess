@@ -32,31 +32,7 @@ class Board:
         self.lastTime = time.time()
         self.time = self.lastTime
         self.staminaDeductionPerSec = 0.5
-    
-    """def toStr(self, color):
-        out = ''
-        isBlack = False
-        if(color == 1):
-            for i in range(8):
-                for j in range(8):
-                    if(isBlack): out += str(Back.BLACK + str(self.board[i][j]) + ' ')
-                    else: out += str(Back.WHITE + str(self.board[i][j]) + ' ')
-                    isBlack = not isBlack
-                isBlack = not isBlack
-                if i < 7: out += Style.RESET_ALL+ ' ' + str(i) +'\n'
-                else: out += Style.RESET_ALL + ' ' + str(i)
-            out += '\n 0  1  2  3  4  5  6  7 '
-        else:
-            for i in range(7, -1, -1):
-                for j in range(7, -1, -1):
-                    if(isBlack): out += str(Back.BLACK + str(self.board[i][j]) + ' ')
-                    else: out += str(Back.WHITE + str(self.board[i][j]) + ' ')
-                    isBlack = not isBlack
-                isBlack = not isBlack
-                if i > 0: out += Style.RESET_ALL + ' ' + str(i) + '\n'
-                else: out += Style.RESET_ALL + ' ' + str(i)
-            out += '\n 7  6  5  4  3  2  1  0 '
-        return out"""
+        self.lastMove = [time.time(), time.time()]
     
     def isOccupied(self, x, y):
         if isinstance(self.board[y][x], Blank):
@@ -66,19 +42,38 @@ class Board:
     def getPiece(self, x, y):
         return self.board[y][x]
     
+    def deltaLastMove(self, color):
+        now = time.time()
+        if color == 1:
+            return now - self.lastMove[1]
+        else: return now - self.lastMove[0]
+    
+    def setLastMove(self, color):
+        now = time.time()
+        if color == 1:
+            self.lastMove[1] = now
+        else: self.lastMove[0] = now
+    
     def is_valid(self, move):
+        color = self.isOccupied(move.fromx, move.fromy)
+
         if not inBounds(move.fromx, move.fromy) or not inBounds(move.tox, move.toy): return False
-        if self.stamina_from_move(move, before = True) > self.getStamina(self.isOccupied(move.fromx, move.fromy)): return False
+        if self.stamina_from_move(move, before = True) > self.getStamina(color): return False
+        if self.deltaLastMove(color) < 1: return False
+
         mask = self.board[move.fromy][move.fromx].createMask(move.fromx, move.fromy, self)
         return mask[move.toy][move.tox]
     
     def move_piece(self, move):
         if not self.is_valid(move): return False
+
+        color = self.isOccupied(move.fromx, move.fromy)
+        self.setLastMove(color)
+
         self.board[move.toy][move.tox] = self.board[move.fromy][move.fromx]
         self.board[move.toy][move.tox].moved = True
         self.board[move.fromy][move.fromx] = Blank()
         return True
-        #print(f"moved piece from {move.fromx} {move.fromy} to {move.tox} { move.toy}")
 
     def checkWin(self):
         blackwin = True

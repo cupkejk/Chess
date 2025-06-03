@@ -4,7 +4,16 @@ from chess import Board, Move
 from random import choice
 import time
 import random
-HOST = 'localhost'
+import sys
+
+
+if len(sys.argv) > 1:
+    ip = sys.argv[1]
+else:
+    ip = "localhost"
+
+
+HOST = ip
 PORT = 65432
 logging = True
 
