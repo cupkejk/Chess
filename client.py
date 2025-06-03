@@ -19,6 +19,8 @@ STAMINA_BAR_BG_COLOR = (50, 50, 50)
 STAMINA_BAR_FG_COLOR_RED = (200, 0, 0)
 STAMINA_BAR_FG_COLOR_GREEN = (0, 200, 0)
 
+last_move = None
+
 def data_to_arr(data):
     message = data.decode('utf-8')
     message = message.split(' ')
@@ -46,17 +48,24 @@ def setup_socket():
     return s, col
 
 def try_to_receive_data(s):
-    move = None
+    msg = None
     stamina = None
+    type = None
     try:
         data = s.recv(100)
         printLog(data)
         if data:
             arr = data_to_arr(data)
-            move, stamina = arr_to_move(arr)
+            type = arr[0]
+            if type == 1:
+                msg, stamina = arr_to_move(arr)
+            if type == 2:
+                msg, stamina = arr[1], arr[2]
+            if type == 3:
+                msg = arr[1]
     except:
         pass
-    return move, stamina
+    return type, msg, stamina
 
 def printLog(log):
     print("DEBUG INFO:", log)
@@ -167,19 +176,31 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("White Chess") if p_color == 1 else pygame.display.set_caption("Black Chess")
 clock = pygame.time.Clock()
 
+winner = 0
+
 while running:
     dt = clock.tick(60) / 1000.0
 
     board.updateStamina()
 
     mouse_pos = pygame.mouse.get_pos()
-    move, stamina = try_to_receive_data(s)
-    if move is not None:
-        board.move_piece(move)
-        board.setStamina(p_color, stamina)
+    type, msg, stamina = try_to_receive_data(s)
+    if type == 1:
+        if msg is not None:
+            board.move_piece(msg)
+            board.setStamina(p_color, stamina)
+    elif type == 2:
+        if msg == 1:
+            board.setStamina(p_color, stamina)
+            last_move = None
+        else:
+            board.revert_move(last_move[0], last_move[1])
+            board.setStamina(p_color, stamina)
+            last_move = None
+    elif type == 3:
+        winner = msg
     
 
-    winner = board.checkWin()
     if winner != 0:
         if winner == 1:
             win_text = "White wins!"
@@ -211,6 +232,8 @@ while running:
             if board.is_valid(move) and board.isOccupied(move.fromx, move.fromy) == p_color:
                 data = move_to_data(move)
                 s.send(data)
+                last_move = [move, board.getPiece(move.tox, move.toy)]
+                board.move_piece(move) #no change
             dragging = False
             drag_piece = None
             start_coords = None

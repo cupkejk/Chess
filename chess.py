@@ -48,6 +48,10 @@ class Board:
             return now - self.lastMove[1]
         else: return now - self.lastMove[0]
     
+    def revert_move(self, move, piece):
+        self.board[move.fromy][move.fromx] = self.board[move.toy][move.tox]
+        self.board[move.toy][move.tox] = piece
+    
     def setLastMove(self, color):
         now = time.time()
         if color == 1:
@@ -74,6 +78,11 @@ class Board:
         self.board[move.toy][move.tox].moved = True
         self.board[move.fromy][move.fromx] = Blank()
         return True
+    
+    def move_test(self, move):
+        self.board[move.toy][move.tox] = self.board[move.fromy][move.fromx]
+        self.board[move.toy][move.tox].moved = True
+        self.board[move.fromy][move.fromx] = Blank()
 
     def checkWin(self):
         blackwin = True

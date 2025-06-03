@@ -39,6 +39,21 @@ def move_to_data(move, stamina):
     data = message.encode('utf-8')
     return data
 
+def ok_to_data(stamina):
+    message = "2 " + str(1) + " " + str(stamina)
+    data = message.encode('utf-8')
+    return data
+
+def not_ok_to_data(stamina):
+    message = "2 " + str(0) + " " + str(stamina)
+    data = message.encode('utf-8')
+    return data
+
+def win_to_data(color):
+    message = "3 " + str(color)
+    data = message.encode('utf-8')
+    return data
+
 def printLog(log):
     if logging:
         print("DEBUG INFO:", log)
@@ -75,8 +90,21 @@ def handle_client(conn, addr, playerid):
                             board.deductStamina(mv)
                             staminas = [board.getStamina(colors[0]), board.getStamina(colors[1])]
                             datas = [move_to_data(mv, staminas[0]), move_to_data(mv, staminas[1])]
-                            clients[0].send(datas[0])
-                            clients[1].send(datas[1])
+                            for i in range(2):
+                                if i == pid:
+                                    clients[i].send(ok_to_data(staminas[pid]))
+                                else:
+                                    clients[i].send(datas[i])
+                            winner = board.checkWin()
+                            if winner != 0:
+                                time.sleep(0.05)
+                                data = win_to_data(winner)
+                                clients[0].send(data)
+                                clients[1].send(data)
+                        else:
+                            staminas = [board.getStamina(colors[0]), board.getStamina(colors[1])]
+                            clients[pid].send(not_ok_to_data(staminas[pid]))
+
 
                 pending_moves.clear()
 
