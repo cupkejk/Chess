@@ -126,11 +126,6 @@ def draw_stamina_bar(surface, current_stamina_val, max_stamina_val):
 
     pygame.draw.rect(surface, STAMINA_BAR_BG_COLOR, (BOARD_WIDTH, 0, STAMINA_BAR_PADDING*2+STAMINA_BAR_WIDTH, STAMINA_BAR_PADDING+HEIGHT))
 
-    for i in range(1, board.MAX_STAMINA):
-        x = BOARD_WIDTH
-        y = STAMINA_BAR_PADDING + bar_actual_height*i/board.MAX_STAMINA
-        pygame.draw.rect(surface, (255, 255, 255), (x, y, STAMINA_BAR_PADDING, 1))
-
     fill_ratio = 0
     if max_stamina_val > 0:
         fill_ratio = current_stamina_val / max_stamina_val
@@ -143,6 +138,12 @@ def draw_stamina_bar(surface, current_stamina_val, max_stamina_val):
                       bar_actual_width, fill_height))
     
     pygame.draw.rect(surface, (200,200,200), (bar_outer_x, bar_outer_y, bar_actual_width, bar_actual_height), 1)
+
+    #paski
+    for i in range(1, board.MAX_STAMINA):
+        x = bar_outer_x
+        y = STAMINA_BAR_PADDING + bar_actual_height*i/board.MAX_STAMINA
+        pygame.draw.rect(surface, (255, 255, 255), (x, y, STAMINA_BAR_WIDTH, 1))
 
 def get_board_coords(mouse_pos):
     x, y = mouse_pos
