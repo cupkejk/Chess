@@ -1,3 +1,5 @@
+import time
+
 def inBounds(x, y):
     if(x > 7 or x < 0): return False
     if(y > 7 or y < 0): return False
@@ -25,6 +27,11 @@ class Board:
         self.board[0][4] = King(-1)
         self.board[7][3] = Queen(1)
         self.board[7][4] = King(1)
+        self.MAX_STAMINA = 10
+        self.staminas = [self.MAX_STAMINA, self.MAX_STAMINA]
+        self.lastTime = time.time()
+        self.time = self.lastTime
+        self.staminaDeductionPerSec = 0.5
     
     """def toStr(self, color):
         out = ''
@@ -56,8 +63,18 @@ class Board:
             return 0
         else: return self.board[y][x].color
     
+    def getPiece(self, x, y):
+        return self.board[y][x]
+    
     def is_valid(self, move):
         if not inBounds(move.fromx, move.fromy) or not inBounds(move.tox, move.toy): return False
+        if self.stamina_from_move(move) > self.getStamina(self.isOccupied(move.fromx, move.fromy)): return False
+        mask = self.board[move.fromy][move.fromx].createMask(move.fromx, move.fromy, self)
+        return mask[move.toy][move.tox]
+    
+    def is_valid_client(self, move):
+        if not inBounds(move.fromx, move.fromy) or not inBounds(move.tox, move.toy): return False
+        #if self.stamina_from_move(move) > self.getStamina(self.isOccupied(move.fromx, move.fromy)): return False
         mask = self.board[move.fromy][move.fromx].createMask(move.fromx, move.fromy, self)
         return mask[move.toy][move.tox]
     
@@ -79,6 +96,65 @@ class Board:
         if(whitewin): return 1
         if(blackwin): return -1
         return 0
+    
+    def stamina_from_move(self, move):
+        try:
+            piece_moved = self.getPiece(move.tox, move.toy)
+            if(piece_moved.points == 0): piece_moved = self.getPiece(move.fromx, move.fromy)
+        except IndexError:
+            print(f"Error: Move coordinates ({move.fromx},{move.fromy}) out of bounds for stamina check.")
+            return 0.0
+
+        piece_char_representation = str(piece_moved).strip()
+
+        if len(piece_char_representation) < 2:
+            return 0.0
+
+        piece_type_char = piece_char_representation[1]
+
+        stamina_costs = {
+            'P': 1.0,
+            'N': 2.5,
+            'B': 2.5,
+            'R': 3.0,
+            'Q': 4.0,
+            'K': 0.5
+        }
+
+        cost = stamina_costs.get(piece_type_char)
+
+        if cost is None:
+            print(f"Warning: Piece type '{piece_type_char}' from '{piece_char_representation}' has no defined stamina cost. Defaulting to 0.")
+            return 0.0
+    
+        return cost
+    
+    def getStamina(self, color):
+        if color == 1:
+            return self.staminas[1]
+        else: return self.staminas[0]
+    
+    def setStamina(self, color, val):
+        if color == 1:
+            self.staminas[1] = val
+        else: self.staminas[0] = val
+    
+    def updateStamina(self):
+        self.time = time.time()
+        dt = self.time - self.lastTime
+        self.lastTime = self.time
+        adding = self.staminaDeductionPerSec * dt
+        for i in range(2):
+            self.staminas[i] += adding
+            if self.staminas[i] > self.MAX_STAMINA: self.staminas[i] = 10
+    
+    def deductStamina(self, move):
+        deduction = self.stamina_from_move(move)
+        col = self.isOccupied(move.tox, move.toy)
+        stamina = self.getStamina(col) - deduction
+        self.setStamina(col, stamina)
+
+
 
     
 

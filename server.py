@@ -19,8 +19,8 @@ def data_to_arr(data):
     message = [eval(num) for num in message]
     return message
 
-def move_to_data(move):
-    message = "1 " + str(move.fromx) + " " + str(move.fromy) + " " + str(move.tox) + " " + str(move.toy)
+def move_to_data(move, stamina):
+    message = "1 " + str(move.fromx) + " " + str(move.fromy) + " " + str(move.tox) + " " + str(move.toy) + " " + str(stamina)
     data = message.encode('utf-8')
     return data
 
@@ -41,15 +41,20 @@ def handle_client(conn, addr, playerid):
         if not data: break
         message = data_to_arr(data)
         printLog(f"received message: {message}")
+        board.updateStamina()
         if message[0] == 1:
             move = Move(message[1], message[2], message[3], message[4])
             printLog("created a move")
             if board.isOccupied(move.fromx, move.fromy) == colors[playerid] and board.move_piece(move):
+                board.deductStamina(move)
+
+                staminas = [board.getStamina(colors[0]), board.getStamina(colors[1])]
+
                 printLog("made a move")
-                data = move_to_data(move)
+                datas = [move_to_data(move, staminas[0]), move_to_data(move, staminas[1])]
                 printLog("sending data")
-                clients[0].send(data)
-                clients[1].send(data)
+                clients[0].send(datas[0])
+                clients[1].send(datas[1])
 
 
 
@@ -59,6 +64,7 @@ def handle_client(conn, addr, playerid):
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.bind((HOST, PORT))
     s.listen()
+    printLog("Starting a server")
 
     while len(clients) < 2:
         conn, addr = s.accept()
