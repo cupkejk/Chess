@@ -16,7 +16,8 @@ PORT = 65432
 STAMINA_BAR_WIDTH = 30
 STAMINA_BAR_PADDING = 10
 STAMINA_BAR_BG_COLOR = (50, 50, 50)
-STAMINA_BAR_FG_COLOR = (0, 200, 0)
+STAMINA_BAR_FG_COLOR_RED = (200, 0, 0)
+STAMINA_BAR_FG_COLOR_GREEN = (0, 200, 0)
 
 def data_to_arr(data):
     message = data.decode('utf-8')
@@ -133,7 +134,9 @@ def draw_stamina_bar(surface, current_stamina_val, max_stamina_val):
 
     fill_height = int(fill_ratio * bar_actual_height)
 
-    pygame.draw.rect(surface, STAMINA_BAR_FG_COLOR,
+    if board.deltaLastMove(p_color) < 1: col = STAMINA_BAR_FG_COLOR_RED
+    else: col = STAMINA_BAR_FG_COLOR_GREEN
+    pygame.draw.rect(surface, col,
                      (bar_outer_x, bar_outer_y + (bar_actual_height - fill_height),
                       bar_actual_width, fill_height))
     
