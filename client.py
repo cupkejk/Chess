@@ -1,6 +1,6 @@
 import pygame
 import os
-from chess import Board, Move
+from chess import Board, Move, Blank
 import socket
 from time import sleep, time
 import sys
@@ -145,7 +145,7 @@ def draw_stamina_bar(surface, current_stamina_val, max_stamina_val):
 
     fill_height = int(fill_ratio * bar_actual_height)
 
-    if board.deltaLastMove(p_color) < 1: col = STAMINA_BAR_FG_COLOR_RED
+    if board.deltaLastMove(p_color) < board.moveCooldown: col = STAMINA_BAR_FG_COLOR_RED
     else: col = STAMINA_BAR_FG_COLOR_GREEN
     pygame.draw.rect(surface, col,
                      (bar_outer_x, bar_outer_y + (bar_actual_height - fill_height),
@@ -179,6 +179,7 @@ pygame.display.set_caption("White Chess") if p_color == 1 else pygame.display.se
 clock = pygame.time.Clock()
 
 winner = 0
+reverted = False
 
 while running:
     dt = clock.tick(60) / 1000.0
@@ -194,11 +195,14 @@ while running:
     elif type == 2:
         if msg == 1:
             board.setStamina(p_color, stamina)
-            last_move = None
-        else:
-            board.revert_move(last_move[0], last_move[1])
+        elif msg == 0:
+            if last_move != None:
+                board.revert_move(last_move[0], last_move[1])
             board.setStamina(p_color, stamina)
-            last_move = None
+        elif msg == 2:
+            printLog("made the move again")
+            board.setStamina(p_color, stamina)
+            printLog(board.move_piece(last_move[0]))
     elif type == 3:
         winner = msg
     

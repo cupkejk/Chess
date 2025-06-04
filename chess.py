@@ -33,6 +33,7 @@ class Board:
         self.time = self.lastTime
         self.staminaDeductionPerSec = 0.5
         self.lastMove = [time.time(), time.time()]
+        self.moveCooldown = 1
     
     def isOccupied(self, x, y):
         if isinstance(self.board[y][x], Blank):
@@ -49,6 +50,7 @@ class Board:
         else: return now - self.lastMove[0]
     
     def revert_move(self, move, piece):
+        self.board[move.toy][move.tox].moved = False
         self.board[move.fromy][move.fromx] = self.board[move.toy][move.tox]
         self.board[move.toy][move.tox] = piece
     
@@ -57,19 +59,30 @@ class Board:
         if color == 1:
             self.lastMove[1] = now
         else: self.lastMove[0] = now
+
+    def printMask(self, mask):
+        for i in range(len(mask)):
+            for j in range(len(mask[i])):
+                if mask[i][j]:
+                    print(1, end = '')
+                else:
+                    print(0, end = '')
+            print()
     
     def is_valid(self, move):
         color = self.isOccupied(move.fromx, move.fromy)
 
         if not inBounds(move.fromx, move.fromy) or not inBounds(move.tox, move.toy): return False
         if self.stamina_from_move(move, before = True) > self.getStamina(color): return False
-        if self.deltaLastMove(color) < 1: return False
+        if self.deltaLastMove(color) < self.moveCooldown: return False
 
         mask = self.board[move.fromy][move.fromx].createMask(move.fromx, move.fromy, self)
+        self.printMask(mask)
         return mask[move.toy][move.tox]
     
     def move_piece(self, move):
         if not self.is_valid(move): return False
+        print(move.fromx, move.fromy, move.tox, move.toy) #to delete
 
         color = self.isOccupied(move.fromx, move.fromy)
         self.setLastMove(color)

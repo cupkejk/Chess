@@ -12,6 +12,8 @@ if len(sys.argv) > 1:
 else:
     ip = "localhost"
 
+time_delay = 0.01
+
 
 HOST = ip
 PORT = 65432
@@ -39,8 +41,8 @@ def move_to_data(move, stamina):
     data = message.encode('utf-8')
     return data
 
-def ok_to_data(stamina):
-    message = "2 " + str(1) + " " + str(stamina)
+def ok_to_data(stamina, type = 1):
+    message = "2 " + str(type) + " " + str(stamina)
     data = message.encode('utf-8')
     return data
 
@@ -58,7 +60,10 @@ def printLog(log):
     if logging:
         print("DEBUG INFO:", log)
 
+reverted = False
+
 def handle_client(conn, addr, playerid):
+    global reverted
     while len(clients) < 2: pass
     data = str(colors[playerid]).encode('utf-8')
     conn.send(data)
@@ -78,11 +83,16 @@ def handle_client(conn, addr, playerid):
             with pending_lock:
                 pending_moves.append((playerid, move))
 
-            time.sleep(0.05)
+            time.sleep(time_delay)
 
             with pending_lock:
                 if len(pending_moves) > 1:
                     random.shuffle(pending_moves)
+                    staminas = [board.getStamina(colors[0]), board.getStamina(colors[1])]
+                    clients[0].send(not_ok_to_data(staminas[0]))
+                    clients[1].send(not_ok_to_data(staminas[1]))
+                    reverted = True
+                    time.sleep(time_delay)
 
                 for pid, mv in pending_moves:
                     with board_lock:
@@ -92,22 +102,28 @@ def handle_client(conn, addr, playerid):
                             datas = [move_to_data(mv, staminas[0]), move_to_data(mv, staminas[1])]
                             for i in range(2):
                                 if i == pid:
-                                    clients[i].send(ok_to_data(staminas[pid]))
+                                    if not reverted:
+                                        clients[i].send(ok_to_data(staminas[pid]))
+                                    else:
+                                        clients[i].send(ok_to_data(staminas[pid], 2))
                                 else:
                                     clients[i].send(datas[i])
                             winner = board.checkWin()
                             if winner != 0:
-                                time.sleep(0.05)
+                                time.sleep(time_delay)
                                 data = win_to_data(winner)
                                 clients[0].send(data)
                                 clients[1].send(data)
                         else:
                             staminas = [board.getStamina(colors[0]), board.getStamina(colors[1])]
-                            clients[pid].send(not_ok_to_data(staminas[pid]))
-                    time.sleep(0.05)
+                            if len(pending_moves) < 2: clients[pid].send(not_ok_to_data(staminas[pid]))
+                            printLog("Wrong Move Detected")
+                    time.sleep(time_delay)
+        
 
 
                 pending_moves.clear()
+        reverted = False
 
 
 
