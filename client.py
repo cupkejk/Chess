@@ -45,7 +45,8 @@ def setup_socket():
     col = eval(data.decode('utf-8'))
     s.send(int(1).to_bytes())
     s.settimeout(0.0)
-    board.last_move[col] = time()
+    if(color == 1): board.lastMove[1] = time()
+    else: board.lastMove[0] = time()
     return s, col
 
 def try_to_receive_data(s):
