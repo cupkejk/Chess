@@ -2,7 +2,7 @@ import pygame
 import os
 from chess import Board, Move
 import socket
-from time import sleep
+from time import sleep, time
 import sys
 
 if len(sys.argv) > 1:
@@ -45,6 +45,7 @@ def setup_socket():
     col = eval(data.decode('utf-8'))
     s.send(int(1).to_bytes())
     s.settimeout(0.0)
+    board.last_move[col] = time()
     return s, col
 
 def try_to_receive_data(s):

@@ -104,6 +104,7 @@ def handle_client(conn, addr, playerid):
                         else:
                             staminas = [board.getStamina(colors[0]), board.getStamina(colors[1])]
                             clients[pid].send(not_ok_to_data(staminas[pid]))
+                    time.sleep(0.05)
 
 
                 pending_moves.clear()
