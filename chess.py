@@ -33,7 +33,7 @@ class Board:
         self.time = self.lastTime
         self.staminaDeductionPerSec = 0.5
         self.lastMove = [time.time(), time.time()]
-        self.moveCooldown = 1
+        self.moveCooldown = 1.5
     
     def isOccupied(self, x, y):
         if isinstance(self.board[y][x], Blank):

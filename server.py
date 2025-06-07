@@ -12,7 +12,7 @@ if len(sys.argv) > 1:
 else:
     ip = "localhost"
 
-time_delay = 0.01
+time_delay = 0.03
 
 
 HOST = ip
