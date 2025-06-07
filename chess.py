@@ -77,7 +77,6 @@ class Board:
         if self.deltaLastMove(color) < self.moveCooldown: return False
 
         mask = self.board[move.fromy][move.fromx].createMask(move.fromx, move.fromy, self)
-        self.printMask(mask)
         return mask[move.toy][move.tox]
     
     def move_piece(self, move):
