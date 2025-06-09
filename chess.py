@@ -81,7 +81,6 @@ class Board:
     
     def move_piece(self, move):
         if not self.is_valid(move): return False
-        print(move.fromx, move.fromy, move.tox, move.toy) #to delete
 
         color = self.isOccupied(move.fromx, move.fromy)
         self.setLastMove(color)
@@ -323,13 +322,3 @@ def pam(piece, x, y):
             else:
                 print(0, end='')
         print()
-
-def consolePlay():
-    board = Board()
-    while True:
-        print(board.toStr(1))
-        move = input().split(' ')
-        print(move)
-        numbers = [eval(i) for i in move]
-        move = Move(numbers[0], numbers[1], numbers[2], numbers[3])
-        board.move_piece(move)
